@@ -1,0 +1,251 @@
+<div class="row">
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <i class="fa fa-user"></i>
+        Items
+      </div>
+      <div class="card-body">
+        <button class="btn btn-outline-info" type="button" id="button1" onclick="generateInput(1)">Generate Input 1</button>
+        <button class="btn btn-outline-info" type="button" id="button2" onclick="generateInput(2)">Generate Input 2</button>
+        <button class="btn btn-outline-info" type="button" id="button3" onclick="generateInput(3)">Generate Input 3</button>
+<!--        <button class="btn btn-outline-info" type="button" id="button4" onclick="showModalNew()">New</button>-->
+
+        <div style="overflow-y: scroll;max-height:400px;">
+        <table id="itemLists" class="table table-bordered table-sm table-striped" style="font-size: 13px; color:#505050; margin-top: 10px">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Taxable</th>
+            <th>Imported</th>
+            <th>Quantity</th>
+          </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        </div>
+
+        <button class="btn btn-outline-success" type="button" id="button5" onclick="addToCart()">Purchase & Generate Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <i class="fa fa-user"></i>
+          Receipt
+      </div>
+      <div class="card-body">
+
+        <div class="row">
+
+          <div class="col-md-12">
+            <table id="tblReceipt" border="0" class="table" style="font-size: 13px; color:#505050; margin-top: 10px">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+              </tr>
+              </thead>
+              <tbody id="tblBody">
+              </tbody>
+            </table>
+            <label >Sales Taxes:</label>
+            <label id="lblSalesTaxes"></label>
+            <br/>
+            <label >Total:</label>
+            <label id="lblTotalAmount"></label>
+          </div>
+        </div>
+     </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalNewItem" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">New Item</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <div class="form-group">
+            <label> Name:</label>
+            <input type="text" class="form-control" id="name"/>
+          </div>
+
+          <div class="form-group">
+            <label> Price:</label>
+            <input type="number" id="price" class="form-control mb-4" placeholder="" step="any" value="1" onkeypress="return(event.charCode >= 48 && event.charCode <= 57) || event.charCode == 46 || event.charCode == 0">
+          </div>
+
+          <div class="form-group">
+
+            <fieldset class="form-group">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" id="isTaxable"/>
+                <span class="custom-control-indicator"></span>
+                <span class="custom-control-description">Taxable</span>
+              </label>
+            </fieldset>
+
+            <fieldset class="form-group">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" id="isImported"/>
+                <span class="custom-control-indicator"></span>
+                <span class="custom-control-description">Imported</span>
+              </label>
+            </fieldset>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="row" style="margin-top:20px !important;">
+            <div class="col-md-6">
+              <button id="newItemConfirm" type="button" class="btn btn-success" onclick="confirmNewItem()">Confirm</button>
+            </div>
+            <div class="col-md-6">
+              <button id="cancelItemConfirm"  type="button" class="btn btn-danger" onclick="closeModalNew()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    });
+
+    var generatedInputIds  = [];
+
+    function showModalNew(){
+      $('#name').val('');
+      $('#price').val(1);
+      $('#modalNewItem').modal('show');
+      $('#name').focus();
+    }
+
+    function closeModalNew(){
+      $('#modalNewItem').modal('hide');
+    }
+
+    function confirmNewItem(){
+        var name = $('#name').val();
+        var price = parseFloat($('#price').val()).toFixed(2);
+        var taxable = $('#isTaxable').prop('checked') || false;
+        var imported = $('#isImported').prop('checked') || false;
+
+        if (name == '') {
+            toastr['warning']('Please fill up name.', {timeOut: 5000});
+        } else if(isNaN(price)){
+            toastr['warning']('Invalid price.', {timeOut: 5000});
+        } else {
+            addTableRow(name,price,taxable,imported, quantity )
+            $('#modalNewItem').modal('hide');
+        }
+    }
+
+    function addTableRow(name,price,taxable,imported, quantity){
+        var table = document.getElementById('itemLists');
+        var id = table.rows.length;
+
+        var row = table.insertRow(table.rows.length);
+
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+
+        cell1.innerHTML = name;
+        cell2.innerHTML = price;
+        cell3.innerHTML = taxable ? 'Yes' : 'No';
+        cell4.innerHTML = imported ? 'Yes' : 'No';
+        cell5.innerHTML = quantity
+    }
+
+
+    function preventNonNumericalInput(e) {
+        e = e || window.event;
+        var charCode = (typeof e.which == "undefined") ? e.keyCode : e.which;
+        var charStr = String.fromCharCode(charCode);
+
+        if (!charStr.match(/^[0-9]+$/))
+            e.preventDefault();
+    }
+
+    function generateInput(input){
+        $.ajax({
+            url: "items/generate_input",
+            method: "POST",
+            dataType: "json",
+            data: {input_type: input}
+        })
+        .done(function(data, textStatus, jqXHR){
+            for (var d in data){
+                addTableRow(data[d]['name'], parseFloat(data[d]['price']).toFixed(2), data[d]['taxable'], data[d]['imported'], data[d]['quantity']);
+            }
+            $('#button' + input).prop('disabled', true);
+            generatedInputIds.push(input)
+        })
+        .fail(function(){
+            alert("Error generating input");
+        })
+    }
+
+    function addToCart(){
+        var table = document.getElementById('itemLists');
+        var length = (table.rows.length - 1);
+        if (length == 0) {
+            toastr['error']('Please purchase atleast 1 item.', {timeOut: 5000});
+        } else {
+
+            $.ajax({
+                url: "items/purchase_generate_receipt",
+                method: "POST",
+                dataType: "json",
+                data: {input_ids: generatedInputIds}
+            })
+                .done(function(data, textStatus, jqXHR){
+                    $("#tblReceipt tr>td").remove();
+                    var receiptTable = document.getElementById('tblReceipt');
+
+                    var displayReceipt = data['item_list'];
+                    for (var i in displayReceipt){
+                      var row = receiptTable.insertRow(receiptTable.rows.length);
+                      var cell1 = row.insertCell(0);
+                      var cell2 = row.insertCell(1);
+                      var cell3 = row.insertCell(2);
+
+                      cell1.innerHTML = displayReceipt[i]['name'];
+                      cell2.innerHTML = displayReceipt[i]['quantity'];
+                      cell3.innerHTML = displayReceipt[i]['taxable_price'];
+                    }
+
+                    document.getElementById('lblSalesTaxes').innerHTML = data['total_tax'];
+                    document.getElementById('lblTotalAmount').innerHTML = data['total_price'];
+
+
+                })
+                .fail(function(){
+                    alert("Error generating input");
+                })
+
+        }
+    }
+
+    <% unless flash[:message].nil? %>
+    toastr['<%= flash[:message]['type'] %>']('<%= flash[:message]['message'] %>', {timeOut: 5000});
+    <% end %>
+
+</script>
